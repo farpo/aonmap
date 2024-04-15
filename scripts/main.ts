@@ -7,10 +7,12 @@ import {
   DimensionLocation,
   Dimension,
   ScriptEventSource,
+  EntityQueryOptions,
+  Entity
 } from "@minecraft/server";
 import { Molecule, deserializeMolecule } from "./molecule.js";
 import { scanMoleculeAt } from "./areamolscanner.js";
-import { MinecraftBiomeTypes, MinecraftBlockTypes } from "@minecraft/vanilla-data";
+import { MinecraftBiomeTypes, MinecraftBlockTypes, MinecraftEntityTypes } from "@minecraft/vanilla-data";
 //Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 //np run local-deploy
 function mainTick() {
@@ -46,6 +48,19 @@ world.beforeEvents.chatSend.subscribe((eventdata) => {
     eventdata.cancel = true;
   }
 });
+function checkAllEntitiesFooting(dim:Dimension, entites:Entity[], wantedFooting:string){
+  for (let i = 0; i < entites.length; i++) {
+    let entity : Entity = entites[i];
+    const footingPos : Vector3 = {x:Math.floor(entity.location.x), y:Math.floor(entity.location.y) - 1, z:Math.floor(entity.location.z)}
+    world.sendMessage("footing pos y: " + footingPos.y + " footing: " + dim.getBlock(footingPos)?.type.id);
+    if(dim.getBlock(footingPos)?.type.id !== "minecraft:" + wantedFooting){
+      world.sendMessage("false: " + "minecraft:" + wantedFooting);
+
+      return false;
+    }
+  }
+  return true;
+}
 system.afterEvents.scriptEventReceive.subscribe((eventData) => {
   const dimension: Dimension | undefined =
       eventData.sourceType === ScriptEventSource.Block
@@ -64,7 +79,7 @@ system.afterEvents.scriptEventReceive.subscribe((eventData) => {
         "setblock " + redstoneBlockPos.x + " " + redstoneBlockPos.y + " " + redstoneBlockPos.z + " redstone_block"
       );
     }
-  } else if (eventData.id === "aon:spawnAvalancheBlocks"){
+  } else if (eventData.id === "aon:placeAvalancheBlocks"){
     const stringArray: string[] = eventData.message.split(":");
     const minX: number = Number(stringArray[0]);
     const minZ: number = Number(stringArray[1]);
@@ -72,12 +87,43 @@ system.afterEvents.scriptEventReceive.subscribe((eventData) => {
     const maxZ: number = Number(stringArray[3]);
     const y: number = Number(stringArray[4]);
     const amount: number = Number(stringArray[5]);
-    const blockType = stringArray[6];
+    const blockType: string = stringArray[6];
     for (let i = 0; i < amount; i++) {
       const randomPos: Vector3 = getRandomPosInXZSquare(minX, minZ, maxX, maxZ, y);
       dimension?.runCommandAsync(
         "setblock " + randomPos.x + " " + randomPos.y + " " + randomPos.z + " " + blockType
       );    
+    }
+  } else if (eventData.id === "aon:spawnMultipleEntities"){
+    const stringArray: string[] = eventData.message.split(":");
+    const x: number = Number(stringArray[0]);
+    const y: number = Number(stringArray[1]);
+    const z: number = Number(stringArray[2]);
+    const amount: number = Number(stringArray[3]);
+    const entityType :string = stringArray[4];
+    for (let i = 0; i < amount; i++) {
+      dimension?.runCommandAsync(
+        "summon " + entityType + " " + x + " " + y + " " + z
+      );    
+    }
+  } else if (eventData.id === "aon:checkEntityAmountAndFooting"){
+    const stringArray: string[] = eventData.message.split(":");
+    const entityType : string = stringArray[0];
+    const wantedAmount : number = Number(stringArray[1]);
+    const wantedFooting: string = stringArray[2];
+    const x: number = Number(stringArray[3]);
+    const y: number = Number(stringArray[4]);
+    const z: number = Number(stringArray[5]);
+    let entites:Entity[] | undefined = dimension?.getEntities({type:entityType});
+    if(typeof entites !== "undefined" && typeof dimension !== "undefined"){
+      world.sendMessage("entities: " + entites.length)
+      if(entites.length === wantedAmount){
+        if(checkAllEntitiesFooting(dimension, entites, wantedFooting)){
+          dimension.runCommandAsync(
+            "setblock " + x + " " + y + " " + z +  " redstone_block"
+          );         
+        }
+      }
     }
   }
 });
