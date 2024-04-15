@@ -1,8 +1,8 @@
 {
   "format_version": 2,
   "header": {
-    "name": "My resource pack",
-    "description": "My resource pack description",
+    "name": "Aon map resources",
+    "description": "Resources for aon map",
     "uuid": "2d7ed858-97eb-48a0-b180-7c80d1ce9a48",
     "version": [
       1,
@@ -17,7 +17,7 @@
   },
   "modules": [
     {
-      "description": "My Resource Pack",
+      "description": "Aon map resources",
       "type": "resources",
       "uuid": "503fe660-142b-46a2-8fec-34a54e944720",
       "version": [
