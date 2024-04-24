@@ -52,9 +52,9 @@ function checkAllEntitiesFooting(dim:Dimension, entites:Entity[], wantedFooting:
   for (let i = 0; i < entites.length; i++) {
     let entity : Entity = entites[i];
     const footingPos : Vector3 = {x:Math.floor(entity.location.x), y:Math.floor(entity.location.y) - 1, z:Math.floor(entity.location.z)}
-    world.sendMessage("footing pos y: " + footingPos.y + " footing: " + dim.getBlock(footingPos)?.type.id);
+    //world.sendMessage("footing pos y: " + footingPos.y + " footing: " + dim.getBlock(footingPos)?.type.id);
     if(dim.getBlock(footingPos)?.type.id !== "minecraft:" + wantedFooting){
-      world.sendMessage("false: " + "minecraft:" + wantedFooting);
+      //world.sendMessage("false: " + "minecraft:" + wantedFooting);
 
       return false;
     }
@@ -116,7 +116,7 @@ system.afterEvents.scriptEventReceive.subscribe((eventData) => {
     const z: number = Number(stringArray[5]);
     let entites:Entity[] | undefined = dimension?.getEntities({type:entityType});
     if(typeof entites !== "undefined" && typeof dimension !== "undefined"){
-      world.sendMessage("entities: " + entites.length)
+      //world.sendMessage("entities: " + entites.length)
       if(entites.length === wantedAmount){
         if(checkAllEntitiesFooting(dimension, entites, wantedFooting)){
           dimension.runCommandAsync(
